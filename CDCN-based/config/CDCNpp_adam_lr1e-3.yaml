@@ -3,7 +3,7 @@ log_dir: 'experiments/log'
 device: '0'
 dataset:
   name: 'nuaa'
-  root: '../../datasets/NUAA_Detectedface'
+  root: '../../datasets/CelebA_Spoof_Croped/Data'
   augmentation:
     horizontal_flip: True
     rotation_range: 10
@@ -12,8 +12,8 @@ dataset:
     contrast: 0.5
     saturation: 0.5
     hue: 0.5
-  train_set: 'val.csv'
-  val_set: 'train.csv'
+  train_set: 'train.csv'
+  val_set: 'test.csv'
   mean: [0.5,0.5,0.5]
   sigma: [0.5,0.5,0.5]
 model:
@@ -24,7 +24,7 @@ model:
 train:
   batch_size: 8
   optimizer: 'adam'
-  lr: 0.00008
+  lr: 0.0001
   num_epochs: 100
   smoothing: True
 val:
