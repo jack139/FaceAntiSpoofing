@@ -6,13 +6,16 @@ from PIL import Image
 import cv2
 from utils.utils import read_cfg, build_network
 from utils.eval import predict
-import face_recognition
 from datetime import datetime
+from insightface.app import FaceAnalysis
+from insightface.utils import face_align
+
+app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
+app.prepare(ctx_id=0, det_size=(640, 640))
+
 
 cfg = read_cfg(cfg_file="config/CDCNpp_adam_lr1e-3.yaml")
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 network = build_network(cfg)
 
 
@@ -22,7 +25,7 @@ val_transform = transforms.Compose([
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
 ])
 
-saved_name = os.path.join(cfg['output_dir'], "CDCNpp_nuaa_e16_acc_0.8658.pth")
+saved_name = os.path.join(cfg['output_dir'], "CDCNpp_nuaa_e4_acc_0.8780.pth")
 state = torch.load(saved_name, map_location=device)
 network.load_state_dict(state['state_dict'])
 print("load model: ", saved_name)
@@ -51,23 +54,17 @@ if __name__ == '__main__':
         print("usage: python3 %s <image_path>" % sys.argv[0])
         sys.exit(1)
 
-    img_name = sys.argv[1]
-
-    #img = Image.open(img_name)
-    #test(img)
-
     frame = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
-    faces = face_recognition.face_locations(frame)
 
-    for (top, right, bottom, left) in faces:
-        x, y, w, h = left, top, right-left+1, bottom-top+1
-        sub_img=frame[y:y+h,x:x+w]
+    faces = app.get(frame, max_num=100) # 检测人脸
 
-        #cv2.imwrite('img_%d_%d.jpg'%(x,y),sub_img)
+
+    for face in faces:
+        sub_img = face_align.norm_crop(frame, landmark=face.kps, image_size=256) # 人脸修正
+        #cv2.imwrite('img_test.jpg',sub_img)
 
         face_img = Image.fromarray(sub_img[:, :, ::-1])
-
-        #face_img.save('img2_%d_%d.jpg'%(x,y))
+        #face_img.save('img2_test.jpg')
 
         start_time = datetime.now()
         preds, score = test(face_img)
