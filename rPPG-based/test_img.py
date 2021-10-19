@@ -81,8 +81,9 @@ def fas_check(image_path):
         sub_img=frame[y:y+h,x:x+w]
         #cv2.imwrite('img_%d_%d.jpg'%(x,y),sub_img)
         rppg_s = get_rppg_pred(sub_img)
-        #print('rPPG= ', rppg_s)
+        print('rPPG= ', rppg_s)
         rppg_s = rppg_s.T
+        print('rPPG= ', rppg_s)
 
         pred = make_pred([sub_img,rppg_s])
 

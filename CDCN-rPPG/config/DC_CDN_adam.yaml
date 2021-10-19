@@ -1,0 +1,33 @@
+output_dir: 'experiments/output'
+log_dir: 'experiments/log'
+device: '0'
+dataset:
+  name: 'nuaa'
+  root: '../../datasets/NUAA_Detectedface'
+  #root: '/media/tao/_dde_data/Datasets/NUAA_Detectedface'
+  augmentation:
+    horizontal_flip: True
+    rotation_range: 10
+    gamma_correction: [0.67, 1.5]
+    brightness: 0.5
+    contrast: 0.5
+    saturation: 0.5
+    hue: 0.5
+  train_set: 'val.csv'
+  val_set: 'train.csv'
+  mean: [0.5,0.5,0.5]
+  sigma: [0.5,0.5,0.5]
+model:
+  base: 'DC_CDN'
+  pretrained: false
+  input_size: [256,256]
+  depth_map_size: [32,32]
+train:
+  batch_size: 4
+  optimizer: 'adam'
+  lr: 0.0001
+  num_epochs: 100
+  smoothing: True
+val:
+  batch_size: 4
+
