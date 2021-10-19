@@ -4,7 +4,6 @@ from torch import optim
 from models.CDCNs import CDCN, CDCNpp
 from models.DC_CDN import C_CDN, DC_CDN
 from models.RPPG import HYPER
-from rPPG2.rPPG_Extracter import rPPG_Extracter
 
 def read_cfg(cfg_file):
     """
@@ -76,17 +75,3 @@ def build_network(cfg):
         raise NotImplementedError
 
     return network
-
-
-def get_rppg_pred(frame):
-    use_classifier = True  # Toggles skin classifier
-    sub_roi = []           # If instead of skin classifier, forhead estimation should be used set to [.35,.65,.05,.15]
-
-    rPPG_extracter = rPPG_Extracter()
-        
-    rPPG = []
-
-    rPPG_extracter.measure_rPPG(frame,use_classifier,sub_roi) 
-    rPPG = np.transpose(rPPG_extracter.rPPG)
-
-    return rPPG

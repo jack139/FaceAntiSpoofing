@@ -53,7 +53,8 @@ class FASTrainer(BaseTrainer):
 
         print('\nEpoch: {}'.format(epoch+1))
         for i, (img, depth_map, rppg, label) in tqdm(enumerate(self.trainloader), total=len(self.trainloader)):
-            img, depth_map, rppg, label = img.to(self.device), depth_map.to(self.device), rppg.to(self.device), label.to(self.device)
+            img, depth_map, rppg, label = img.to(self.device), depth_map.to(self.device), \
+                rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
             net_depth_map, _, _, _, _, _ = self.network(img, rppg)
             self.optimizer.zero_grad()
             loss = self.criterion(net_depth_map, depth_map)
@@ -69,7 +70,8 @@ class FASTrainer(BaseTrainer):
             self.train_loss_metric.update(loss.item())
             self.train_acc_metric.update(accuracy)
 
-        print('iter: {}, loss: {:.6f}, acc: {:.4f}'.format(epoch * len(self.trainloader) + i, self.train_loss_metric.avg, self.train_acc_metric.avg))
+        print('iter: {}, loss: {:.6f}, acc: {:.4f}'.format(epoch * len(self.trainloader) \
+            + i, self.train_loss_metric.avg, self.train_acc_metric.avg))
 
 
     def train(self):

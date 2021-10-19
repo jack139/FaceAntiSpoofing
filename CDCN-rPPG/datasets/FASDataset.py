@@ -6,7 +6,20 @@ import numpy as np
 from PIL import Image
 import cv2
 from torchvision import transforms
+from rPPG2.rPPG_Extracter import rPPG_Extracter
 
+def get_rppg_pred(frame):
+    use_classifier = True  # Toggles skin classifier
+    sub_roi = []           # If instead of skin classifier, forhead estimation should be used set to [.35,.65,.05,.15]
+
+    rPPG_extracter = rPPG_Extracter()
+        
+    rPPG = []
+
+    rPPG_extracter.measure_rPPG(frame,use_classifier,sub_roi) 
+    rPPG = np.transpose(rPPG_extracter.rPPG)
+
+    return rPPG
 
 class FASDataset(Dataset):
     """ A data loader for Face PAD where samples are organized in this way
@@ -45,7 +58,7 @@ class FASDataset(Dataset):
         # 取得 rPPG 特征
         single_img = cv2.imread(img_name, cv2.IMREAD_COLOR)
         rppg_s = get_rppg_pred(single_img)
-        rppg_s = rppg_s.T
+        rppg_s = rppg_s.T[0]
 
         # 图片处理
         img = Image.open(img_name)
