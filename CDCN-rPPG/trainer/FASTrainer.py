@@ -92,9 +92,10 @@ class FASTrainer(BaseTrainer):
 
         seed = randint(0, len(self.valloader)-1)
         with torch.no_grad():
-            for i, (img, depth_map, label) in tqdm(enumerate(self.valloader), total=len(self.valloader)):
-                img, depth_map, label = img.to(self.device), depth_map.to(self.device), label.to(self.device)
-                net_depth_map, _, _, _, _, _ = self.network(img)
+            for i, (img, depth_map, rppg, label) in tqdm(enumerate(self.valloader), total=len(self.valloader)):
+                img, depth_map, rppg, label = img.to(self.device), depth_map.to(self.device), \
+                    rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
+                net_depth_map, _, _, _, _, _ = self.network(img, rppg)
                 loss = self.criterion(net_depth_map, depth_map)
 
                 preds, score = predict(net_depth_map)
