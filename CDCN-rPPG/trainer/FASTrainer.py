@@ -61,9 +61,10 @@ class FASTrainer(BaseTrainer):
             loss.backward()
             self.optimizer.step()
 
-            preds, _ = predict(net_depth_map)
-
+            mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
+            preds, _ = predict(mix_depth)
             targets, _ = predict(depth_map)
+
             accuracy = calc_accuracy(preds, targets)
 
             # Update metrics

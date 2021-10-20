@@ -7,11 +7,14 @@ from insightface.utils import face_align
 from tqdm import tqdm
 
 image_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof"
-#output_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped"
-output_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
-meta_root = output_root+"/metas/protocol2"
+output_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped"
+#output_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
+meta_root = image_root+"/metas/protocol2"
 
 output_size = 256
+
+app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
+app.prepare(ctx_id=0, det_size=(640, 640))
 
 def det_face(input_file, output_file):
     img = cv2.imread(input_file, cv2.IMREAD_COLOR)
@@ -37,6 +40,10 @@ spoof_type_filter = [1, 3, 4, 5, 7, 8, 9]
 
 # 生成 训练用 csv
 def check_img(filename, output_file):
+    spoof = {}
+    for x in spoof_type_filter:
+        spoof[x] = []
+
     data_set = []
     li = sp = 0
     for k, v in json.load(open(filename)).items():
@@ -49,12 +56,16 @@ def check_img(filename, output_file):
             else: # spoof
                 if v[40] in spoof_type_filter:
                     data_set.append("%s,%s"%(k[5:], '0'))
+                    spoof[v[40]].append((k,v))
                     sp += 1
 
     print(len(data_set), li, sp)
 
     with open(output_file, 'w') as f:
         f.write('\n'.join(data_set))
+
+    for k in spoof.keys():
+        print("spoof[%d]: %d"%(k, len(spoof[k])))
 
 
 # 从原始图，生成人脸图
@@ -112,15 +123,15 @@ def trans_to_json(filename, filename_out, ratio):
 if __name__ == '__main__':
 
     # 按比例生成指定数量的json
-    trans_to_json(meta_root+"/test_on_high_quality_device/test_label.json", "test_label.json", 0.1)
-    trans_to_json(meta_root+"/test_on_high_quality_device/train_label.json", "train_label.json", 0.06)
+    #trans_to_json(meta_root+"/test_on_high_quality_device/test_label.json", "test_label.json", 0.1)
+    #trans_to_json(meta_root+"/test_on_high_quality_device/train_label.json", "train_label.json", 0.06)
 
     # 生成人脸图片
     #trans_to_face("test_label.json")
     #trans_to_face("train_label.json")
 
     # 生成训练用 csv
-    #check_img("test_label.json", "high_quality_test.csv")
-    #check_img("train_label.json", "high_quality_train.csv")
+    check_img("test_label.json", "high_quality_test.csv")
+    check_img("train_label.json", "high_quality_train.csv")
 
     

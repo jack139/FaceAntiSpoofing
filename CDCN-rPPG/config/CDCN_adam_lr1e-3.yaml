@@ -14,8 +14,8 @@ dataset:
     contrast: 0.5
     saturation: 0.5
     hue: 0.5
-  train_set: 'train.csv'
-  val_set: 'val.csv'
+  train_set: 'high_quality_train.csv'
+  val_set: 'high_quality_test.csv'
   mean: [0.5,0.5,0.5]
   sigma: [0.5,0.5,0.5]
 model:
