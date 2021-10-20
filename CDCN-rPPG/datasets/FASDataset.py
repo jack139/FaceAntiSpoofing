@@ -55,8 +55,11 @@ class FASDataset(Dataset):
         img_name = self.data.iloc[index, 0]
         img_name = os.path.join(self.root_dir, img_name)
 
+        # cv2 读入
+        single_img = cv2.imread(img_name, cv2.IMREAD_COLOR) # 原图
+        gray = cv2.cvtColor(single_img, cv2.COLOR_BGR2GRAY) # 灰度图， 用于 depth_map
+
         # 取得 rPPG 特征
-        single_img = cv2.imread(img_name, cv2.IMREAD_COLOR)
         rppg_s = get_rppg_pred(single_img)
         rppg_s = rppg_s.T[0]
 
@@ -67,7 +70,9 @@ class FASDataset(Dataset):
         label = np.expand_dims(label, axis=0)
 
         if label == 1:
-            depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * self.label_weight
+            #depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * self.label_weight
+            # 使用灰度图做 特征图
+            depth_map = cv2.resize(gray, (self.depth_map_size[0], self.depth_map_size[1])).astype(np.float32)
         else:
             depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * (1.0 - self.label_weight)
 
