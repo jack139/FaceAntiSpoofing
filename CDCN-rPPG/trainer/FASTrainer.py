@@ -55,9 +55,9 @@ class FASTrainer(BaseTrainer):
         for i, (img, depth_map, rppg, label) in tqdm(enumerate(self.trainloader), total=len(self.trainloader)):
             img, depth_map, rppg, label = img.to(self.device), depth_map.to(self.device), \
                 rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
-            net_depth_map, _, _, _, _, _ = self.network(img, rppg)
+            rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
             self.optimizer.zero_grad()
-            loss = self.criterion(net_depth_map, depth_map)
+            loss = self.criterion(net_depth_map, rppg_depth, depth_map)
             loss.backward()
             self.optimizer.step()
 
@@ -95,10 +95,11 @@ class FASTrainer(BaseTrainer):
             for i, (img, depth_map, rppg, label) in tqdm(enumerate(self.valloader), total=len(self.valloader)):
                 img, depth_map, rppg, label = img.to(self.device), depth_map.to(self.device), \
                     rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
-                net_depth_map, _, _, _, _, _ = self.network(img, rppg)
-                loss = self.criterion(net_depth_map, depth_map)
+                rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
+                loss = self.criterion(net_depth_map, rppg_depth, depth_map)
 
-                preds, score = predict(net_depth_map)
+                mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
+                preds, score = predict(mix_depth)
                 targets, _ = predict(depth_map)
 
                 accuracy = calc_accuracy(preds, targets)

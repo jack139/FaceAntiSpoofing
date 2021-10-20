@@ -39,9 +39,10 @@ class HYPER(nn.Module):
         rppg_out = self.rPPG(x2)  # x [1, 32, 32] 
 
         #depth = torch.cat((cdc_out[0],rppg_out), dim=1)
-        depth = cdc_out[0] + rppg_out
+        #depth = cdc_out[0] + rppg_out
 
-        return tuple([depth]+list(cdc_out)[1:]) # 模仿 CDCN 的返回
+        # 模仿 CDCN 的返回, 第1个是rppg的,后面是CDCN返回的
+        return tuple([rppg_out]+list(cdc_out)) 
 
 
 if __name__ == "__main__":

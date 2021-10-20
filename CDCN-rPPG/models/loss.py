@@ -63,3 +63,17 @@ class DepthLoss(nn.Module):
         absolute_loss = self.criterion_absolute_loss(predicted_depth_map, gt_depth_map)
         contrastive_loss = self.criterion_contrastive_loss(predicted_depth_map, gt_depth_map)
         return absolute_loss + contrastive_loss
+
+
+class DepthPPGLoss(nn.Module):
+    def __init__(self, device):
+        super(DepthPPGLoss, self).__init__()
+        self.criterion_absolute_loss = nn.MSELoss()
+        self.criterion_contrastive_loss = ContrastDepthLoss(device=device)
+
+    # rPPG loss 和 CDCN loss一起构成
+    def forward(self, predicted_depth_map, rppg_depth, gt_depth_map):
+        absolute_loss = self.criterion_absolute_loss(predicted_depth_map, gt_depth_map)
+        absolute_rppg_loss = self.criterion_absolute_loss(rppg_depth, gt_depth_map)
+        contrastive_loss = self.criterion_contrastive_loss(predicted_depth_map, gt_depth_map)
+        return absolute_loss + contrastive_loss + absolute_rppg_loss

@@ -6,7 +6,7 @@ from datasets.FASDataset import FASDataset
 from utils.transform import RandomGammaCorrection
 from utils.utils import read_cfg, get_optimizer, get_device, build_network
 from trainer.FASTrainer import FASTrainer
-from models.loss import DepthLoss
+from models.loss import DepthPPGLoss
 from torch.optim.lr_scheduler import StepLR
 
 cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
@@ -22,7 +22,7 @@ optimizer = get_optimizer(cfg, network)
 
 lr_scheduler = StepLR(optimizer=optimizer, step_size=30, gamma=0.1)
 
-criterion = DepthLoss(device=device)
+criterion = DepthPPGLoss(device=device)
 
 writer = SummaryWriter(cfg['log_dir'])
 

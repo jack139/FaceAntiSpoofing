@@ -4,6 +4,8 @@ device: '0'
 dataset:
   name: 'CelebA_Spoof'
   root: '../../datasets/CelebA_Spoof_Croped/Data'
+  #name: 'nuaa'
+  #root: '/media/tao/_dde_data/Datasets/NUAA_Detectedface'
   augmentation:
     horizontal_flip: True
     rotation_range: 10
@@ -13,7 +15,7 @@ dataset:
     saturation: 0.5
     hue: 0.5
   train_set: 'train.csv'
-  val_set: 'test.csv'
+  val_set: 'val.csv'
   mean: [0.5,0.5,0.5]
   sigma: [0.5,0.5,0.5]
 model:
