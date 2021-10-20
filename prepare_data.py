@@ -1,26 +1,20 @@
 import os
 from shutil import copyfile
 
-train_csv = "../CDCN-Face-Anti-Spoofing.pytorch/data/train.csv"
-val_csv = "../CDCN-Face-Anti-Spoofing.pytorch/data/val.csv"
+data_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped/Data"
+output_root = "data/CelebA_Spoof_Croped/Data"
 
-data_root = "../../datasets/NUAA_Detectedface"
-output_data = "data/dataset"
-
-def trans_data(input_file, output_dir):
+def trans_data(input_file):
     with open(input_file, 'r') as f:
         for l in f:
             d = l.strip().split(',')
-            _, img_file = os.path.split(d[0])
-            copyfile(os.path.join(data_root, d[0]), os.path.join(output_dir, d[1], img_file))
+            filepath = os.path.join(data_root, d[0])
+            if os.path.exists(filepath):
+                filepath_out = os.path.join(output_root, d[0])
+                out_dir, _ = os.path.split(filepath_out)
+                os.makedirs(out_dir, exist_ok=True)
+                copyfile(filepath, filepath_out)
 
 if __name__ == '__main__':
-    train_dir = os.path.join(output_data, "train")
-    val_dir = os.path.join(output_data, "val")
-    os.makedirs('%s/1'%train_dir, exist_ok=True)
-    os.makedirs('%s/0'%train_dir, exist_ok=True)
-    os.makedirs('%s/1'%val_dir, exist_ok=True)
-    os.makedirs('%s/0'%val_dir, exist_ok=True)
-
-    trans_data(train_csv, train_dir)
-    trans_data(val_csv, val_dir)
+    trans_data("data/high_quality_train.csv")
+    trans_data("data/high_quality_test.csv")
