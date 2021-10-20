@@ -63,8 +63,9 @@ class FASDataset(Dataset):
         rppg_s = get_rppg_pred(single_img)
         rppg_s = rppg_s.T[0]
 
-        # 图片处理
-        img = Image.open(img_name)
+        # PIL 图片处理
+        #img = Image.open(img_name)
+        img = Image.fromarray(single_img[:, :, ::-1])
 
         label = self.data.iloc[index, 1].astype(np.float32)
         label = np.expand_dims(label, axis=0)

@@ -9,6 +9,7 @@ from utils.eval import predict
 from datetime import datetime
 from insightface.app import FaceAnalysis
 from insightface.utils import face_align
+from datasets.FASDataset import get_rppg_pred
 
 app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
 app.prepare(ctx_id=0, det_size=(640, 640))
@@ -34,7 +35,7 @@ if device.type!='cpu':
     network.cuda()
 
 
-def test(img):
+def test(img, rppg_s):
     network.eval()
 
     img = val_transform(img)
@@ -42,9 +43,10 @@ def test(img):
 
     with torch.no_grad():
         img = img.to(device)
-        net_depth_map, _, _, _, _, _ = network(img)
+        rppg_depth, net_depth_map, _, _, _, _, _ = network(img, rppg_s)
 
-        preds, score = predict(net_depth_map)
+        mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
+        preds, score = predict(mix_depth)
 
     return preds, score
 
@@ -63,11 +65,15 @@ if __name__ == '__main__':
         sub_img = face_align.norm_crop(frame, landmark=face.kps, image_size=256) # 人脸修正
         #cv2.imwrite('img_test.jpg',sub_img)
 
+        # 取得 rPPG 特征
+        rppg_s = get_rppg_pred(sub_img)
+        rppg_s = rppg_s.T[0]
+
         face_img = Image.fromarray(sub_img[:, :, ::-1])
         #face_img.save('img2_test.jpg')
 
         start_time = datetime.now()
-        preds, score = test(face_img)
+        preds, score = test(face_img, rppg_s)
         print('[Time taken: {!s}]'.format(datetime.now() - start_time))
 
         print(preds)
