@@ -7,7 +7,7 @@ from utils.meters import AvgMeter
 from utils.eval import add_visualization_to_tensorboard, predict, calc_accuracy
 from tqdm import tqdm
 
-PREDICT_THRESHOLD = 0.1
+PREDICT_THRESHOLD = 0.5
 
 class FASTrainer(BaseTrainer):
     def __init__(self, cfg, network, optimizer, criterion, lr_scheduler, device, trainloader, valloader, writer):
@@ -52,17 +52,18 @@ class FASTrainer(BaseTrainer):
         self.train_loss_metric.reset(epoch)
         self.train_acc_metric.reset(epoch)
 
-        print('\nEpoch: {}'.format(epoch+1))
+        print('\nEpoch: {}, lr: {}'.format(epoch+1, self.lr_scheduler.get_last_lr()))
         for i, (img, depth_map, rppg, label) in tqdm(enumerate(self.trainloader), total=len(self.trainloader)):
             img, depth_map, rppg, label = img.to(self.device), depth_map.to(self.device), \
                 rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
             rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
+            mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
             self.optimizer.zero_grad()
-            loss = self.criterion(net_depth_map, rppg_depth, depth_map)
+            #loss = self.criterion(net_depth_map, rppg_depth, depth_map)
+            loss = self.criterion(mix_depth, depth_map)
             loss.backward()
             self.optimizer.step()
 
-            mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
             preds, _ = predict(mix_depth, threshold=PREDICT_THRESHOLD)
             targets, _ = predict(depth_map, threshold=PREDICT_THRESHOLD)
 
@@ -85,7 +86,7 @@ class FASTrainer(BaseTrainer):
                 self.best_val_acc = epoch_acc
                 self.save_model(epoch, epoch_acc)
             print('val_acc: {:.4f}, best_val_acc: {:.4f}'.format(epoch_acc, self.best_val_acc))
-
+            self.lr_scheduler.step()
 
     def validate(self, epoch):
         self.network.eval()
@@ -98,9 +99,10 @@ class FASTrainer(BaseTrainer):
                 img, depth_map, rppg, label = img.to(self.device), depth_map.to(self.device), \
                     rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
                 rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
-                loss = self.criterion(net_depth_map, rppg_depth, depth_map)
-
                 mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
+                #loss = self.criterion(net_depth_map, rppg_depth, depth_map)
+                loss = self.criterion(mix_depth, depth_map)
+                
                 preds, score = predict(mix_depth, threshold=PREDICT_THRESHOLD)
                 targets, _ = predict(depth_map, threshold=PREDICT_THRESHOLD)
 

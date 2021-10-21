@@ -12,10 +12,10 @@ from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 from datasets.FASDataset import get_rppg_pred
 
-PREDICT_THRESHOLD = 0.1
+PREDICT_THRESHOLD = 0.5
 
 app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
-app.prepare(ctx_id=0, det_size=(640, 640))
+app.prepare(ctx_id=0, det_size=(224, 224))
 
 
 cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
@@ -29,7 +29,7 @@ val_transform = transforms.Compose([
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
 ])
 
-saved_name = os.path.join(cfg['output_dir'], "CDCN_CelebA_Spoof_e4_acc_0.8271.pth")
+saved_name = os.path.join(cfg['output_dir'], "CDCN_CelebA_Spoof_e7_acc_0.8944.pth")
 state = torch.load(saved_name, map_location=device)
 network.load_state_dict(state['state_dict'])
 print("load model: ", saved_name)
