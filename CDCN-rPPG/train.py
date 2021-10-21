@@ -9,8 +9,8 @@ from trainer.FASTrainer import FASTrainer
 from models.loss import DepthPPGLoss, DepthLoss
 from torch.optim.lr_scheduler import StepLR
 
-cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
-#cfg = read_cfg(cfg_file="config/CDCNpp_adam_lr1e-3.yaml")
+#cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
+cfg = read_cfg(cfg_file="config/CDCNpp_adam_lr1e-3.yaml")
 #cfg = read_cfg(cfg_file="config/C_CDN_adam.yaml")
 #cfg = read_cfg(cfg_file="config/DC_CDN_adam.yaml")
 

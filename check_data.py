@@ -123,8 +123,8 @@ def trans_to_json(filename, filename_out, ratio):
 if __name__ == '__main__':
 
     # 按比例生成指定数量的json
-    #trans_to_json(meta_root+"/test_on_high_quality_device/test_label.json", "test_label.json", 0.1)
-    #trans_to_json(meta_root+"/test_on_high_quality_device/train_label.json", "train_label.json", 0.06)
+    #trans_to_json(meta_root+"/test_on_high_quality_device/test_label.json", "test_label.json", 0.3)
+    #trans_to_json(meta_root+"/test_on_high_quality_device/train_label.json", "train_label.json", 0.1)
 
     # 生成人脸图片
     #trans_to_face("test_label.json")
