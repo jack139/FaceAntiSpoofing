@@ -2,7 +2,7 @@ output_dir: 'experiments/output'
 log_dir: 'experiments/log'
 device: '0'
 dataset:
-  name: 'nuaa'
+  name: 'CelebA_Spoof'
   root: '../../datasets/CelebA_Spoof_Croped/Data'
   augmentation:
     horizontal_flip: True
@@ -12,8 +12,8 @@ dataset:
     contrast: 0.5
     saturation: 0.5
     hue: 0.5
-  train_set: 'train.csv'
-  val_set: 'test.csv'
+  train_set: 'high_quality_train.csv'
+  val_set: 'high_quality_test.csv'
   mean: [0.5,0.5,0.5]
   sigma: [0.5,0.5,0.5]
 model:

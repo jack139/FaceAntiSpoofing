@@ -31,17 +31,17 @@ dump_input = torch.randn((1, 3, cfg['model']['input_size'][0], cfg['model']['inp
 #writer.add_graph(network, dump_input)
 
 train_transform = transforms.Compose([
-    RandomGammaCorrection(max_gamma=cfg['dataset']['augmentation']['gamma_correction'][1],
-                            min_gamma=cfg['dataset']['augmentation']['gamma_correction'][0]),
-    transforms.RandomResizedCrop(cfg['model']['input_size'][0]),
+    #RandomGammaCorrection(max_gamma=cfg['dataset']['augmentation']['gamma_correction'][1],
+    #                        min_gamma=cfg['dataset']['augmentation']['gamma_correction'][0]),
+    #transforms.RandomResizedCrop(cfg['model']['input_size'][0]),
     # transforms.ColorJitter(
     #     brightness=cfg['dataset']['augmentation']['brightness'],
     #     contrast=cfg['dataset']['augmentation']['contrast'],
     #     saturation=cfg['dataset']['augmentation']['saturation'],
     #     hue=cfg['dataset']['augmentation']['hue']
     # ),
-    transforms.RandomRotation(cfg['dataset']['augmentation']['rotation_range']),
-    transforms.RandomHorizontalFlip(),
+    #transforms.RandomRotation(cfg['dataset']['augmentation']['rotation_range']),
+    #transforms.RandomHorizontalFlip(),
     transforms.Resize(cfg['model']['input_size']),
     transforms.ToTensor(),
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
