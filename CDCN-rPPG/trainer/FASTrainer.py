@@ -23,9 +23,9 @@ class FASTrainer(BaseTrainer):
 
         self.best_val_acc = 0.0
 
-    def load_model(self):
-        saved_name = os.path.join(self.cfg['output_dir'], '{}_{}.pth'.format(self.cfg['model']['base'], self.cfg['dataset']['name']))
-        state = torch.load(saved_name)
+    def load_model(self, ckpt_name):
+        saved_name = os.path.join(self.cfg['output_dir'], ckpt_name)
+        state = torch.load(saved_name, map_location=self.device)
 
         self.optimizer.load_state_dict(state['optimizer'])
         self.network.load_state_dict(state['state_dict'])
