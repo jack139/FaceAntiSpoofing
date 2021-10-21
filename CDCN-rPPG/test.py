@@ -1,5 +1,6 @@
 import sys
 import os
+import numpy as np
 import torch
 from torchvision import transforms
 from PIL import Image
@@ -11,11 +12,13 @@ from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 from datasets.FASDataset import get_rppg_pred
 
+PREDICT_THRESHOLD = 0.1
+
 app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
 app.prepare(ctx_id=0, det_size=(640, 640))
 
 
-cfg = read_cfg(cfg_file="config/CDCNpp_adam_lr1e-3.yaml")
+cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 network = build_network(cfg)
 
@@ -26,7 +29,7 @@ val_transform = transforms.Compose([
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
 ])
 
-saved_name = os.path.join(cfg['output_dir'], "CDCNpp_nuaa_e4_acc_0.8780.pth")
+saved_name = os.path.join(cfg['output_dir'], "CDCN_CelebA_Spoof_e4_acc_0.8271.pth")
 state = torch.load(saved_name, map_location=device)
 network.load_state_dict(state['state_dict'])
 print("load model: ", saved_name)
@@ -41,12 +44,16 @@ def test(img, rppg_s):
     img = val_transform(img)
     img = img.unsqueeze(0)
 
+    rppg_s = torch.from_numpy(rppg_s.astype(np.float32))
+    rppg_s = rppg_s.unsqueeze(0)
+
     with torch.no_grad():
         img = img.to(device)
+        rppg_s = rppg_s.to(device)
         rppg_depth, net_depth_map, _, _, _, _, _ = network(img, rppg_s)
 
         mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
-        preds, score = predict(mix_depth)
+        preds, score = predict(mix_depth, threshold=PREDICT_THRESHOLD)
 
     return preds, score
 
