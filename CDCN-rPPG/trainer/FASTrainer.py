@@ -7,7 +7,7 @@ from utils.meters import AvgMeter
 from utils.eval import add_visualization_to_tensorboard, predict, calc_accuracy
 from tqdm import tqdm
 
-PREDICT_THRESHOLD = 0.5
+PREDICT_THRESHOLD = 0.4
 
 class FASTrainer(BaseTrainer):
     def __init__(self, cfg, network, optimizer, criterion, lr_scheduler, device, trainloader, valloader, writer):
@@ -104,8 +104,8 @@ class FASTrainer(BaseTrainer):
                 loss = self.criterion(mix_depth, depth_map)
                 
                 preds, score = predict(mix_depth, threshold=PREDICT_THRESHOLD)
-                targets, _ = predict(depth_map, threshold=PREDICT_THRESHOLD)
-
+                targets, _ = predict(depth_map, threshold=0.0001)
+                #print(preds, targets, score)
                 accuracy = calc_accuracy(preds, targets)
 
                 # Update metrics

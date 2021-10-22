@@ -71,9 +71,9 @@ class FASDataset(Dataset):
         label = np.expand_dims(label, axis=0)
 
         if label == 1:
-            depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * self.label_weight
+            #depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * self.label_weight
             # 使用灰度图做 特征图
-            #depth_map = cv2.resize(gray, (self.depth_map_size[0], self.depth_map_size[1])).astype(np.float32) / 255.0
+            depth_map = cv2.resize(gray, (self.depth_map_size[0], self.depth_map_size[1])).astype(np.float32) / 255.0
         else:
             depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * (1.0 - self.label_weight)
 

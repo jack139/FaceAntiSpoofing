@@ -12,7 +12,7 @@ from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 from datasets.FASDataset import get_rppg_pred
 
-PREDICT_THRESHOLD = 0.5
+PREDICT_THRESHOLD = 0.4
 
 app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
 app.prepare(ctx_id=0, det_size=(224, 224))
@@ -29,7 +29,7 @@ val_transform = transforms.Compose([
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
 ])
 
-saved_name = os.path.join(cfg['output_dir'], "CDCN_CelebA_Spoof_e7_acc_0.8944.pth")
+saved_name = os.path.join(cfg['output_dir'], "CDCN_CelebA_Spoof_e4_acc_0.9432.pth")
 state = torch.load(saved_name, map_location=device)
 network.load_state_dict(state['state_dict'])
 print("load model: ", saved_name)

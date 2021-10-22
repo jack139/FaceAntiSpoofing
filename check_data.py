@@ -6,10 +6,10 @@ from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 from tqdm import tqdm
 
-#image_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof"
-#output_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped"
-image_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
-output_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
+image_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof"
+output_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped"
+#image_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
+#output_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
 meta_root = image_root+"/metas/protocol2"
 
 output_size = 256
