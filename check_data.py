@@ -6,9 +6,10 @@ from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 from tqdm import tqdm
 
-image_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof"
-output_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped"
-#output_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
+#image_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof"
+#output_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped"
+image_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
+output_root = "/media/tao/_dde_data/Datasets/CelebA_Spoof_Croped"
 meta_root = image_root+"/metas/protocol2"
 
 output_size = 256
@@ -86,7 +87,7 @@ def trans_to_face(filename):
 
 
 # 从json文件 按类别和百分比 生成新的文件
-def trans_to_json(filename, filename_out, ratio):
+def trans_to_json(filename, filename_out, ratio, avg=False):
     w = json.load(open(filename)).items()
     total = len(w)
 
@@ -106,14 +107,24 @@ def trans_to_json(filename, filename_out, ratio):
 
     new_set = []
     random.shuffle(live)
-    new_set.extend(live[:int(len(live)*ratio)])
+    new_set.extend(live[:int(len(live)*ratio)]) # live 数据
     print("live: %d --> %d"%(len(live), len(new_set)))
 
-    for k in spoof.keys():
-        random.shuffle(spoof[k])
-        tt = spoof[k][:int(len(spoof[k])*ratio)]
-        new_set.extend(tt)
-        print("spoof[%d]: %d --> %d"%(k, len(spoof[k]), len(tt)))
+    if avg: # 各类数量平均
+        spoof_num = int( (total*ratio - len(new_set) ) / 5 ) # 4, 9 为零，所以除 5
+
+        for k in spoof.keys():
+            random.shuffle(spoof[k])
+            tt = spoof[k][:spoof_num]
+            new_set.extend(tt)
+            print("spoof[%d]: %d --> %d"%(k, len(spoof[k]), len(tt)))
+
+    else: # 各类按 ration 比例
+        for k in spoof.keys():
+            random.shuffle(spoof[k])
+            tt = spoof[k][:int(len(spoof[k])*ratio)]
+            new_set.extend(tt)
+            print("spoof[%d]: %d --> %d"%(k, len(spoof[k]), len(tt)))
 
     json.dump(dict(new_set), open(filename_out, 'w'))
 
@@ -123,7 +134,7 @@ def trans_to_json(filename, filename_out, ratio):
 if __name__ == '__main__':
 
     # 按比例生成指定数量的json
-    #trans_to_json(meta_root+"/test_on_high_quality_device/test_label.json", "test_label.json", 0.3)
+    trans_to_json(meta_root+"/test_on_high_quality_device/test_label.json", "test_label.json", 0.3, True)
     #trans_to_json(meta_root+"/test_on_high_quality_device/train_label.json", "train_label.json", 0.1)
 
     # 生成人脸图片
@@ -131,7 +142,7 @@ if __name__ == '__main__':
     #trans_to_face("train_label.json")
 
     # 生成训练用 csv
-    check_img("test_label.json", "high_quality_test.csv")
-    check_img("train_label.json", "high_quality_train.csv")
+    #check_img("test_label.json", "high_quality_test.csv")
+    #check_img("train_label.json", "high_quality_train.csv")
 
     
