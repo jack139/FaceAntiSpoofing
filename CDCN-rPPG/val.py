@@ -13,9 +13,9 @@ cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
 #cfg = read_cfg(cfg_file="config/DC_CDN_adam.yaml")
 
 #                                      0.4     0.5     0.6   
-test_csv = "high_all_test.csv"     #  0.7930
+#test_csv = "high_all_test.csv"     #  0.7930
 #test_csv = "high_30k_test.csv"     #  0.8094 
-#test_csv = "high_20k_test.csv"      #  0.7780  0.7586  0.6558
+test_csv = "high_20k_test.csv"      #  0.7780  0.7586  0.6558
 
 device = get_device(cfg)
 
@@ -23,7 +23,7 @@ network = build_network(cfg)
 
 optimizer = get_optimizer(cfg, network)
 
-criterion = DepthLoss(device=device)
+criterion = DepthPPGLoss(device=device)
 
 writer = SummaryWriter(cfg['log_dir'])
 
@@ -60,7 +60,7 @@ trainer = FASTrainer(
     writer=writer
 )
 
-trainer.load_model("CDCN_CelebA_Spoof_e4_acc_0.9432.pth")
+trainer.load_model("CDCN_CelebA_Spoof_e7_acc_0.9044.pth")
 
 val_acc = trainer.validate(0)
 print("val acc: %.4f"%val_acc)

@@ -7,7 +7,7 @@ from utils.meters import AvgMeter
 from utils.eval import add_visualization_to_tensorboard, predict, calc_accuracy
 from tqdm import tqdm
 
-PREDICT_THRESHOLD = 0.45
+PREDICT_THRESHOLD = 0.4
 
 class FASTrainer(BaseTrainer):
     def __init__(self, cfg, network, optimizer, criterion, lr_scheduler, device, trainloader, valloader, writer):
@@ -59,13 +59,13 @@ class FASTrainer(BaseTrainer):
             rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
             mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
             self.optimizer.zero_grad()
-            #loss = self.criterion(net_depth_map, rppg_depth, depth_map)
-            loss = self.criterion(mix_depth, depth_map)
+            loss = self.criterion(net_depth_map, rppg_depth, depth_map)
+            #loss = self.criterion(mix_depth, depth_map)
             loss.backward()
             self.optimizer.step()
 
             preds, _ = predict(mix_depth, threshold=PREDICT_THRESHOLD)
-            targets, _ = predict(depth_map, threshold=PREDICT_THRESHOLD)
+            targets, _ = predict(depth_map, threshold=0.011)
 
             accuracy = calc_accuracy(preds, targets)
 
@@ -73,8 +73,9 @@ class FASTrainer(BaseTrainer):
             self.train_loss_metric.update(loss.item())
             self.train_acc_metric.update(accuracy)
 
-        print('iter: {}, loss: {:.6f}, acc: {:.4f}'.format(epoch * len(self.trainloader) \
-            + i, self.train_loss_metric.avg, self.train_acc_metric.avg))
+        print('iter: {}, loss: {:.6f}'.format(epoch * len(self.trainloader) + i, self.train_loss_metric.avg))
+        #print('iter: {}, loss: {:.6f}, acc: {:.4f}'.format(epoch * len(self.trainloader) \
+        #    + i, self.train_loss_metric.avg, self.train_acc_metric.avg))
 
 
     def train(self):
@@ -106,8 +107,8 @@ class FASTrainer(BaseTrainer):
                     rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
                 rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
                 mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
-                #loss = self.criterion(net_depth_map, rppg_depth, depth_map)
-                loss = self.criterion(mix_depth, depth_map)
+                loss = self.criterion(net_depth_map, rppg_depth, depth_map)
+                #loss = self.criterion(mix_depth, depth_map)
                 
                 preds, score = predict(mix_depth, threshold=PREDICT_THRESHOLD)
                 targets, _ = predict(depth_map, threshold=0.011)
@@ -139,11 +140,7 @@ class FASTrainer(BaseTrainer):
             opt_f1 = f1_score(Ylabel, Xscore >= opt_tau)
             opt_acc = accuracy_score(Ylabel, Xscore >= opt_tau)
 
-            #print("thresholds: ", thresholds)
-            #print("f1_scores: ", f1_scores)
-            #print("acc_scores: ", acc_scores)
-            print("opt_threshold: %.4f"%opt_tau)
-            print("f1: %.4f\tacc: %.4f"%(opt_f1, opt_acc))
+            print("opt_threshold: %.4f\tf1: %.4f\tacc: %.4f"%(opt_tau, opt_f1, opt_acc))
 
             #return self.val_acc_metric.avg
             return opt_acc
