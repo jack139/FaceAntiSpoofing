@@ -7,7 +7,7 @@ from utils.meters import AvgMeter
 from utils.eval import add_visualization_to_tensorboard, predict, calc_accuracy
 from tqdm import tqdm
 
-PREDICT_THRESHOLD = 0.4
+PREDICT_THRESHOLD = 0.45
 
 class FASTrainer(BaseTrainer):
     def __init__(self, cfg, network, optimizer, criterion, lr_scheduler, device, trainloader, valloader, writer):
@@ -89,9 +89,15 @@ class FASTrainer(BaseTrainer):
             self.lr_scheduler.step()
 
     def validate(self, epoch):
+        import numpy as np
+        from sklearn.metrics import f1_score, accuracy_score
+
         self.network.eval()
         self.val_loss_metric.reset(epoch)
         self.val_acc_metric.reset(epoch)
+
+        Xscore = []
+        Ylabel = []
 
         seed = randint(0, len(self.valloader)-1)
         with torch.no_grad():
@@ -104,7 +110,7 @@ class FASTrainer(BaseTrainer):
                 loss = self.criterion(mix_depth, depth_map)
                 
                 preds, score = predict(mix_depth, threshold=PREDICT_THRESHOLD)
-                targets, _ = predict(depth_map, threshold=0.0001)
+                targets, _ = predict(depth_map, threshold=0.011)
                 #print(preds, targets, score)
                 accuracy = calc_accuracy(preds, targets)
 
@@ -115,4 +121,29 @@ class FASTrainer(BaseTrainer):
                 if i == seed:
                     add_visualization_to_tensorboard(self.cfg, epoch, img, preds, targets, score, self.writer)
 
-            return self.val_acc_metric.avg
+                Xscore.extend(score.tolist())
+                Ylabel.extend(targets.tolist())
+
+            Xscore = np.array(Xscore)
+            Ylabel = np.array(Ylabel)
+
+            thresholds = np.arange(0.1, 1.0, 0.01)
+
+            f1_scores = [f1_score(Ylabel, Xscore >= t) for t in thresholds]
+            acc_scores = [accuracy_score(Ylabel, Xscore >= t) for t in thresholds]
+
+            opt_idx = np.argmax(f1_scores)
+            # Threshold at maximal F1 score
+            opt_tau = thresholds[opt_idx]
+            # Accuracy at maximal F1 score
+            opt_f1 = f1_score(Ylabel, Xscore >= opt_tau)
+            opt_acc = accuracy_score(Ylabel, Xscore >= opt_tau)
+
+            #print("thresholds: ", thresholds)
+            #print("f1_scores: ", f1_scores)
+            #print("acc_scores: ", acc_scores)
+            print("opt_threshold: %.4f"%opt_tau)
+            print("f1: %.4f\tacc: %.4f"%(opt_f1, opt_acc))
+
+            #return self.val_acc_metric.avg
+            return opt_acc

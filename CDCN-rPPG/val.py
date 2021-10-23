@@ -13,8 +13,8 @@ cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
 #cfg = read_cfg(cfg_file="config/DC_CDN_adam.yaml")
 
 #                                      0.4     0.5     0.6   
-#test_csv = "high_all_test.csv"     #   
-test_csv = "high_30k_test.csv"     #  0.8094 
+test_csv = "high_all_test.csv"     #  0.7930
+#test_csv = "high_30k_test.csv"     #  0.8094 
 #test_csv = "high_20k_test.csv"      #  0.7780  0.7586  0.6558
 
 device = get_device(cfg)
