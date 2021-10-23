@@ -12,7 +12,8 @@ from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 from datasets.FASDataset import get_rppg_pred
 
-PREDICT_THRESHOLD = 0.4
+PREDICT_THRESHOLD = 0.21
+USE_MIX = True
 
 app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
 app.prepare(ctx_id=0, det_size=(224, 224))
@@ -29,7 +30,7 @@ val_transform = transforms.Compose([
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
 ])
 
-saved_name = os.path.join(cfg['output_dir'], "CDCN_CelebA_Spoof_e4_acc_0.9432.pth")
+saved_name = os.path.join(cfg['output_dir'], "CDCN_CelebA_Spoof_e7_acc_0.9044.pth")
 state = torch.load(saved_name, map_location=device)
 network.load_state_dict(state['state_dict'])
 print("load model: ", saved_name)
@@ -38,7 +39,7 @@ if device.type!='cpu':
     network.cuda()
 
 
-def test(img, rppg_s):
+def test(img, rppg_s, mix=True):
     network.eval()
 
     img = val_transform(img)
@@ -52,7 +53,10 @@ def test(img, rppg_s):
         rppg_s = rppg_s.to(device)
         rppg_depth, net_depth_map, _, _, _, _, _ = network(img, rppg_s)
 
-        mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
+        if mix:
+            mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
+        else:
+            mix_depth = net_depth_map
         preds, score = predict(mix_depth, threshold=PREDICT_THRESHOLD)
 
     return preds, score
@@ -80,7 +84,7 @@ if __name__ == '__main__':
         #face_img.save('img2_test.jpg')
 
         start_time = datetime.now()
-        preds, score = test(face_img, rppg_s)
+        preds, score = test(face_img, rppg_s, USE_MIX)
         print('[Time taken: {!s}]'.format(datetime.now() - start_time))
 
         print(preds)
