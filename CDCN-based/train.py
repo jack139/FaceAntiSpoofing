@@ -20,14 +20,12 @@ network = build_network(cfg)
 
 optimizer = get_optimizer(cfg, network)
 
-lr_scheduler = StepLR(optimizer=optimizer, step_size=30, gamma=0.1)
+lr_scheduler = StepLR(optimizer=optimizer, step_size=10, gamma=0.5)
 
 criterion = DepthLoss(device=device)
 
-writer = SummaryWriter(cfg['log_dir'])
-
-dump_input = torch.randn((1, 3, cfg['model']['input_size'][0], cfg['model']['input_size'][1]))
-
+#writer = SummaryWriter(cfg['log_dir'])
+#dump_input = torch.randn((1, 3, cfg['model']['input_size'][0], cfg['model']['input_size'][1]))
 #writer.add_graph(network, dump_input)
 
 train_transform = transforms.Compose([
@@ -92,9 +90,9 @@ trainer = FASTrainer(
     device=device,
     trainloader=trainloader,
     valloader=valloader,
-    writer=writer
+    writer=None
 )
 
 trainer.train()
 
-writer.close()
+#writer.close()

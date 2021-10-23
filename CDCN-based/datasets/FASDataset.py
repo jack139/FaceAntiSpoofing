@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
 from PIL import Image
+import cv2
 from torchvision import transforms
 
 
@@ -41,13 +42,21 @@ class FASDataset(Dataset):
         img_name = self.data.iloc[index, 0]
         img_name = os.path.join(self.root_dir, img_name)
 
-        img = Image.open(img_name)
+        # cv2 读入
+        single_img = cv2.imread(img_name, cv2.IMREAD_COLOR) # 原图
+        gray = cv2.cvtColor(single_img, cv2.COLOR_BGR2GRAY) # 灰度图， 用于 depth_map
+
+        # PIL 图片处理
+        #img = Image.open(img_name)
+        img = Image.fromarray(single_img[:, :, ::-1])
 
         label = self.data.iloc[index, 1].astype(np.float32)
         label = np.expand_dims(label, axis=0)
 
         if label == 1:
-            depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * self.label_weight
+            #depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * self.label_weight
+            # 使用灰度图做 特征图
+            depth_map = cv2.resize(gray, (self.depth_map_size[0], self.depth_map_size[1])).astype(np.float32) / 255.0
         else:
             depth_map = np.ones((self.depth_map_size[0], self.depth_map_size[1]), dtype=np.float32) * (1.0 - self.label_weight)
 

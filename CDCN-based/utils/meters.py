@@ -23,8 +23,8 @@ class AvgMeter():
         self.sum += val*n
         self.count += n
         self.avg = self.sum / self.count if self.count !=0 else 0
-        if self.per_iter_vis:
+        if self.writer and self.per_iter_vis:
             self.writer.add_scalar(self.name, self.avg, self.epoch * self.num_iter_per_epoch + self.count - 1)
         else:
-            if self.count == self.num_iter_per_epoch - 1:
+            if self.writer and (self.count == self.num_iter_per_epoch - 1):
                 self.writer.add_scalar(self.name, self.avg, self.epoch)

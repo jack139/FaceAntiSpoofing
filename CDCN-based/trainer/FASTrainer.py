@@ -51,7 +51,7 @@ class FASTrainer(BaseTrainer):
         self.train_loss_metric.reset(epoch)
         self.train_acc_metric.reset(epoch)
 
-        print('\nEpoch: {}'.format(epoch+1))
+        print('\nEpoch: {}, lr: {}'.format(epoch+1, self.lr_scheduler.get_last_lr()))
         for i, (img, depth_map, label) in tqdm(enumerate(self.trainloader), total=len(self.trainloader)):
             img, depth_map, label = img.to(self.device), depth_map.to(self.device), label.to(self.device)
             net_depth_map, _, _, _, _, _ = self.network(img)
@@ -60,20 +60,20 @@ class FASTrainer(BaseTrainer):
             loss.backward()
             self.optimizer.step()
 
-            preds, _ = predict(net_depth_map)
+            #preds, _ = predict(net_depth_map)
 
-            targets, _ = predict(depth_map)
-            accuracy = calc_accuracy(preds, targets)
+            #targets, _ = predict(depth_map)
+            #accuracy = calc_accuracy(preds, targets)
 
             # Update metrics
             self.train_loss_metric.update(loss.item())
-            self.train_acc_metric.update(accuracy)
+            #self.train_acc_metric.update(accuracy)
 
-        print('iter: {}, loss: {:.6f}, acc: {:.4f}'.format(epoch * len(self.trainloader) + i, self.train_loss_metric.avg, self.train_acc_metric.avg))
+        #print('iter: {}, loss: {:.6f}, acc: {:.4f}'.format(epoch * len(self.trainloader) + i, self.train_loss_metric.avg, self.train_acc_metric.avg))
+        print('iter: {}, loss: {:.6f}'.format(epoch * len(self.trainloader) + i, self.train_loss_metric.avg))
 
 
     def train(self):
-
         for epoch in range(self.cfg['train']['num_epochs']):
             self.train_one_epoch(epoch)
             epoch_acc = self.validate(epoch)
@@ -81,12 +81,19 @@ class FASTrainer(BaseTrainer):
                 self.best_val_acc = epoch_acc
                 self.save_model(epoch, epoch_acc)
             print('val_acc: {:.4f}, best_val_acc: {:.4f}'.format(epoch_acc, self.best_val_acc))
+            self.lr_scheduler.step()
 
 
     def validate(self, epoch):
+        import numpy as np
+        from sklearn.metrics import f1_score, accuracy_score
+
         self.network.eval()
         self.val_loss_metric.reset(epoch)
         self.val_acc_metric.reset(epoch)
+
+        Xscore = []
+        Ylabel = []
 
         seed = randint(0, len(self.valloader)-1)
         with torch.no_grad():
@@ -96,15 +103,36 @@ class FASTrainer(BaseTrainer):
                 loss = self.criterion(net_depth_map, depth_map)
 
                 preds, score = predict(net_depth_map)
-                targets, _ = predict(depth_map)
+                targets, _ = predict(depth_map, threshold=0.011)
 
-                accuracy = calc_accuracy(preds, targets)
+                #accuracy = calc_accuracy(preds, targets)
 
                 # Update metrics
                 self.val_loss_metric.update(loss.item())
-                self.val_acc_metric.update(accuracy)
+                #self.val_acc_metric.update(accuracy)
 
-                if i == seed:
-                    add_visualization_to_tensorboard(self.cfg, epoch, img, preds, targets, score, self.writer)
+                #if i == seed:
+                #    add_visualization_to_tensorboard(self.cfg, epoch, img, preds, targets, score, self.writer)
 
-            return self.val_acc_metric.avg
+                Xscore.extend(score.tolist())
+                Ylabel.extend(targets.tolist())
+
+            Xscore = np.array(Xscore)
+            Ylabel = np.array(Ylabel)
+
+            thresholds = np.arange(0.1, 1.0, 0.01)
+
+            f1_scores = [f1_score(Ylabel, Xscore >= t) for t in thresholds]
+            acc_scores = [accuracy_score(Ylabel, Xscore >= t) for t in thresholds]
+
+            opt_idx = np.argmax(f1_scores)
+            # Threshold at maximal F1 score
+            opt_tau = thresholds[opt_idx]
+            # Accuracy at maximal F1 score
+            opt_f1 = f1_score(Ylabel, Xscore >= opt_tau)
+            opt_acc = accuracy_score(Ylabel, Xscore >= opt_tau)
+
+            print("opt_threshold: %.4f\tf1: %.4f\tacc: %.4f"%(opt_tau, opt_f1, opt_acc))
+
+            #return self.val_acc_metric.avg
+            return opt_acc

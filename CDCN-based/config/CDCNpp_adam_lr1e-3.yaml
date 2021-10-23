@@ -3,7 +3,7 @@ log_dir: 'experiments/log'
 device: '0'
 dataset:
   name: 'CelebA_Spoof'
-  root: '../../datasets/CelebA_Spoof_Croped/Data'
+  root: '/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped/Data'
   augmentation:
     horizontal_flip: True
     rotation_range: 10
@@ -12,8 +12,8 @@ dataset:
     contrast: 0.5
     saturation: 0.5
     hue: 0.5
-  train_set: 'high_quality_train.csv'
-  val_set: 'high_quality_test.csv'
+  train_set: 'high_20k_train.csv'
+  val_set: 'high_30k_test.csv'
   mean: [0.5,0.5,0.5]
   sigma: [0.5,0.5,0.5]
 model:
