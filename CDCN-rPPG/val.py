@@ -59,7 +59,7 @@ trainer = FASTrainer(
     writer=writer
 )
 
-trainer.load_model("CDCN_CelebA_Spoof_e7_acc_0.9044.pth")
+trainer.load_model("CDCN_CelebA_Spoof_e12_acc_0.9441.pth")
 
 val_acc = trainer.validate(0)
 print("val acc: %.4f"%val_acc)
