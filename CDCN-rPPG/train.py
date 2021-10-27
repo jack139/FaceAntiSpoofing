@@ -32,8 +32,8 @@ optimizer = get_optimizer(cfg, network)
 
 lr_scheduler = StepLR(optimizer=optimizer, step_size=5, gamma=0.8)
 
-criterion = DepthPPGLoss(device=device)
-#criterion = DepthLoss(device=device)
+#criterion = DepthPPGLoss(device=device)
+criterion = DepthLoss(device=device)
 
 writer = SummaryWriter(cfg['log_dir'])
 

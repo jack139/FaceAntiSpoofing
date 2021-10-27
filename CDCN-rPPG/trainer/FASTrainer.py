@@ -59,8 +59,8 @@ class FASTrainer(BaseTrainer):
             rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
             mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
             self.optimizer.zero_grad()
-            loss = self.criterion(net_depth_map, rppg_depth, depth_map)
-            #loss = self.criterion(mix_depth, depth_map)
+            #loss = self.criterion(net_depth_map, rppg_depth, depth_map)
+            loss = self.criterion(mix_depth, depth_map)
             loss.backward()
             self.optimizer.step()
 
@@ -107,8 +107,8 @@ class FASTrainer(BaseTrainer):
                     rppg.type(torch.FloatTensor).to(self.device), label.to(self.device)
                 rppg_depth, net_depth_map, _, _, _, _, _ = self.network(img, rppg)
                 mix_depth = (net_depth_map + rppg_depth) / 2 # 算术平均
-                loss = self.criterion(net_depth_map, rppg_depth, depth_map)
-                #loss = self.criterion(mix_depth, depth_map)
+                #loss = self.criterion(net_depth_map, rppg_depth, depth_map)
+                loss = self.criterion(mix_depth, depth_map)
                 
                 preds, score = predict(mix_depth, threshold=PREDICT_THRESHOLD)
                 targets, _ = predict(depth_map, threshold=0.011)
