@@ -60,9 +60,8 @@ while True:
         # Draw a rectangle around the faces
         rimg = app.draw_on(frame, faces)
 
-        #for (top, right, bottom, left) in faces:
         for face in faces:
-            sub_img = face_align.norm_crop(frame, landmark=face.kps, image_size=256) # 人脸修正
+            sub_img = face_align.norm_crop(frame, landmark=face.kps, image_size=128) # 人脸修正
             rppg_s = get_rppg_pred(sub_img)
             rppg_s = rppg_s.T
 

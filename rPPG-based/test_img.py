@@ -15,7 +15,12 @@ from keras.preprocessing.image import img_to_array
 #########################
 from rPPG2.rPPG_Extracter import *
 #########################
-import face_recognition
+from insightface.app import FaceAnalysis
+from insightface.utils import face_align
+
+app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
+app.prepare(ctx_id=0, det_size=(224, 224))
+
 
 
 # load YAML and create model
@@ -73,15 +78,15 @@ def fas_check(image_path):
     # Capture frame-by-frame
     frame = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
-    faces = face_recognition.face_locations(frame)
+    faces = app.get(frame, max_num=100) # 检测人脸
 
     # Draw a rectangle around the faces
-    for (top, right, bottom, left) in faces:
-        x, y, w, h = left, top, right-left+1, bottom-top+1
-        sub_img=frame[y:y+h,x:x+w]
+    rimg = app.draw_on(frame, faces)
+
+    for face in faces:
+        sub_img = face_align.norm_crop(frame, landmark=face.kps, image_size=128) # 人脸修正
         #cv2.imwrite('img_%d_%d.jpg'%(x,y),sub_img)
         rppg_s = get_rppg_pred(sub_img)
-        print('rPPG= ', rppg_s)
         rppg_s = rppg_s.T
         print('rPPG= ', rppg_s)
 
@@ -90,9 +95,7 @@ def fas_check(image_path):
         print("Real: "+str(pred[0][0]))
         print("Fake: "+str(pred[0][1]))
 
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-
-    #cv2.imwrite('img.jpg',frame)
+    #cv2.imwrite('img.jpg',rimg)
 
 
 if __name__ == '__main__':
