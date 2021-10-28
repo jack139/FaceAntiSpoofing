@@ -6,10 +6,13 @@ import cv2
 from keras.models import model_from_yaml
 from keras.preprocessing.image import img_to_array
 #########################
-from rPPG.rPPG_Extracter import *
-from rPPG.rPPG_lukas_Extracter import *
+from rPPG2.rPPG_Extracter import *
 #########################
-import face_recognition
+from insightface.app import FaceAnalysis
+from insightface.utils import face_align
+
+app = FaceAnalysis(allowed_modules=['detection']) # enable detection model only
+app.prepare(ctx_id=0, det_size=(224, 224))
 
 
 # load YAML and create model
@@ -25,47 +28,15 @@ print("[INFO] Model is loaded from disk")
 dim = (128,128)
 def get_rppg_pred(frame):
     use_classifier = True  # Toggles skin classifier
-    use_flow = False       # (Mixed_motion only) Toggles PPG detection with Lukas Kanade optical flow          
     sub_roi = []           # If instead of skin classifier, forhead estimation should be used set to [.35,.65,.05,.15]
-    use_resampling = False  # Set to true with webcam 
-    
-    fftlength = 300
-    fs = 20
-    f = np.linspace(0,fs//2,fftlength//2 + 1) * 60;
-
-    timestamps = []
-    time_start = [0]
-
-    break_ = False
 
     rPPG_extracter = rPPG_Extracter()
-    rPPG_extracter_lukas = rPPG_Lukas_Extracter()
-    bpm = 0
-    
-    dt = time.time()-time_start[0]
-    time_start[0] = time.time()
-    if len(timestamps) == 0:
-        timestamps.append(0)
-    else:
-        timestamps.append(timestamps[-1] + dt)
         
     rPPG = []
 
     rPPG_extracter.measure_rPPG(frame,use_classifier,sub_roi) 
     rPPG = np.transpose(rPPG_extracter.rPPG)
-    
-        # Extract Pulse
-    if rPPG.shape[1] > 10:
-        if use_resampling :
-            t = np.arange(0,timestamps[-1],1/fs)
-            
-            rPPG_resampled= np.zeros((3,t.shape[0]))
-            for col in [0,1,2]:
-                rPPG_resampled[col] = np.interp(t,timestamps,rPPG[col])
-            rPPG = rPPG_resampled
-        num_frames = rPPG.shape[1]
 
-        t = np.arange(num_frames)/fs
     return rPPG
     
 
@@ -78,56 +49,30 @@ def make_pred(li):
     return single_pred
 
 
-    
-cascPath = 'rPPG/util/haarcascade_frontalface_default.xml'
-faceCascade = cv2.CascadeClassifier(cascPath)
-
-
 video_capture = cv2.VideoCapture(0)
 
-collected_results = []
-counter = 0          # count collected buffers
-frames_buffer = 5    # how many frames to collect to check for
-accepted_falses = 1  # how many should have zeros to say it is real
 while True:
     # Capture frame-by-frame
     ret, frame = video_capture.read()
-    if ret:
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        #faces = faceCascade.detectMultiScale(
-        #    gray,
-        #    scaleFactor=1.1,
-        #    minNeighbors=5
-        #)
-        faces = face_recognition.face_locations(gray)
-        
+    if ret:        
+        faces = app.get(frame, max_num=100) # 检测人脸
+
         # Draw a rectangle around the faces
-        #for (x, y, w, h) in faces:
-        for (top, right, bottom, left) in faces:
-            x, y, w, h = left, top, right-left+1, bottom-top+1
-            sub_img=frame[y:y+h,x:x+w]
+        rimg = app.draw_on(frame, faces)
+
+        #for (top, right, bottom, left) in faces:
+        for face in faces:
+            sub_img = face_align.norm_crop(frame, landmark=face.kps, image_size=256) # 人脸修正
             rppg_s = get_rppg_pred(sub_img)
             rppg_s = rppg_s.T
 
             pred = make_pred([sub_img,rppg_s])
 
-            collected_results.append(np.argmax(pred))
-            counter += 1
-
-            cv2.putText(frame,"Real: "+str(pred[0][0]), (50,30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), lineType=cv2.LINE_AA)
-            cv2.putText(frame,"Fake: "+str(pred[0][1]), (50,60), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), lineType=cv2.LINE_AA)
-            if len(collected_results) == frames_buffer:
-                #print(sum(collected_results))
-                if sum(collected_results) <= accepted_falses:
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                else:
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
-                collected_results.pop(0)
-
-
+            cv2.putText(rimg,"Real: "+str(pred[0][0]), (50,30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), lineType=cv2.LINE_AA)
+            cv2.putText(rimg,"Fake: "+str(pred[0][1]), (50,60), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), lineType=cv2.LINE_AA)
 
         # Display the resulting frame
-        cv2.imshow('To quit press q', frame)
+        cv2.imshow('To quit press q', rimg)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
