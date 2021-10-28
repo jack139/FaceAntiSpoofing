@@ -1,10 +1,14 @@
 import os
 from test_img import fas_check2
 
-nuaa_root = "/media/tao/_dde_data/Datasets/NUAA_Detectedface"
+#nuaa_root = "/media/tao/_dde_data/Datasets/NUAA_Detectedface"
+#train_csv = "train.csv"
+#val_csv = "val.csv"
 
-train_csv = "train.csv"
-val_csv = "val.csv"
+nuaa_root = "/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped/Data"
+train_csv = "high_30k_train.csv"
+val_csv = "high_30k_test.csv"
+
 
 def test(input_file):
     N = 0
@@ -19,7 +23,7 @@ def test(input_file):
             if round(r[0])==int(d[1]):
                 T += 1
 
-            #print(img_file, r[0], d[1], round(r[0])==int(d[1]))
+            print(img_file, r[0], d[1], round(r[0])==int(d[1]))
 
     return T/N
 

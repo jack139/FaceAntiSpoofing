@@ -12,8 +12,8 @@ cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
 #cfg = read_cfg(cfg_file="config/C_CDN_adam.yaml")
 #cfg = read_cfg(cfg_file="config/DC_CDN_adam.yaml")
 
-#test_csv = "high_all_test.csv"
-test_csv = "high_30k_test.csv"
+test_csv = "high_all_test.csv"
+#test_csv = "high_30k_test.csv"
 #test_csv = "high_20k_test.csv"
 
 device = get_device(cfg)
@@ -22,7 +22,8 @@ network = build_network(cfg)
 
 optimizer = get_optimizer(cfg, network)
 
-criterion = DepthPPGLoss(device=device)
+#criterion = DepthPPGLoss(device=device)
+criterion = DepthLoss(device=device)
 
 writer = SummaryWriter(cfg['log_dir'])
 
