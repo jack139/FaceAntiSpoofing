@@ -24,6 +24,9 @@ cfg = read_cfg(cfg_file="config/CDCN_adam_lr1e-3.yaml")
 #cfg = read_cfg(cfg_file="config/C_CDN_adam.yaml")
 #cfg = read_cfg(cfg_file="config/DC_CDN_adam.yaml")
 
+print('train: ', cfg['dataset']['train_set'])
+print('val: ', cfg['dataset']['val_set'])
+
 device = get_device(cfg)
 
 network = build_network(cfg)

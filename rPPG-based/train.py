@@ -9,6 +9,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 from keras.models import Model
 from keras.optimizers import Adam, SGD
+from keras.callbacks import ModelCheckpoint
 
 #########################
 from keras.models import model_from_yaml
@@ -18,11 +19,14 @@ from rPPG2.rPPG_Extracter import *
 
 
 batch_size = 128
-steps_per_epoch = 100
-epochs = 5
-learning_rate=1e-3
-train_dir = 'data/dataset/val'
-val_dir = 'data/dataset/train'
+#steps_per_epoch = 250 # 20k
+steps_per_epoch = 326 # 30k
+epochs = 10
+learning_rate=2e-4
+data_dir = '/home/tao/Downloads/CelebA_Spoof_zip2/CelebA_Spoof/CelebA_Spoof_Croped/Data'
+#train_csv = 'high_20k_nuaa_train.csv'
+train_csv = 'high_30k_nuaa_train.csv'
+val_csv = 'high_30k_nuaa_test.csv'
 
 
 ###### rPPG 
@@ -42,12 +46,13 @@ def get_rppg_pred(frame):
    
 
 # 数据生成器
-def data_generator(data_path, batch_size):
+def data_generator(data_path, data_csv, batch_size):
     file_list = []
-    for i in os.listdir(os.path.join(data_path, '0')):
-        file_list.append((i, '0'))
-    for i in os.listdir(os.path.join(data_path, '1')):
-        file_list.append((i, '1'))
+    for i in open(os.path.join(data_path, data_csv)):
+        if i.strip()=='':
+            continue
+        file_list.append(i.strip().split(','))
+
     random.shuffle(file_list)
 
     print(data_path, ": ", len(file_list), "\tbatch: ", batch_size)
@@ -57,9 +62,9 @@ def data_generator(data_path, batch_size):
             X1 = X2 = y = None
             for m in range(batch_size):
                 i = file_list[n*batch_size+m]
-                single_img = cv2.imread(os.path.join(data_path, i[1], i[0]), cv2.IMREAD_COLOR)
+                single_img = cv2.imread(os.path.join(data_path, i[0]), cv2.IMREAD_COLOR)
                 if single_img.shape[2]!=3: # 过滤掉单色图片
-                    print("----> ", os.path.join(data_path, i[1], i[0]))
+                    print("----> ", os.path.join(data_path, i[0]))
                     continue
                 rppg_s = get_rppg_pred(single_img)
                 rppg_s = rppg_s.T
@@ -89,30 +94,31 @@ def data_generator(data_path, batch_size):
             yield [X1, X2], y
 
 
-train_generator = data_generator(train_dir, batch_size)
-val_generator = data_generator(val_dir, 1)
+train_generator = data_generator(data_dir, train_csv, batch_size)
+val_generator = data_generator(data_dir, val_csv, batch_size)
 
 # load YAML and create model
 yaml_file = open("trained_model/RGB_rPPG_merge_softmax_.yaml", 'r')
 loaded_model_yaml = yaml_file.read()
 yaml_file.close()
 model = model_from_yaml(loaded_model_yaml)
-# load weights into new model
-#model.load_weights("trained_model/RGB_rPPG_merge_softmax_.h5")
-#print("[INFO] Model is loaded from disk")
 
-# compile the model (should be done *after* setting layers to non-trainable)
-model.compile(optimizer=Adam(lr = learning_rate), loss='categorical_crossentropy', metrics = ['accuracy'])
+# load weights into new model
+model.load_weights("batch_128_epochs_10_steps_326_0.h5")
+print("[INFO] Model is loaded from disk")
+
+model.compile(optimizer=Adam(lr = learning_rate), loss='categorical_crossentropy', metrics = ['categorical_accuracy'])
 model.summary()
 
+model_checkpoint = ModelCheckpoint('batch_%d_epochs_%d_steps_%d_0.h5'%(batch_size, epochs, steps_per_epoch), 
+    monitor='val_categorical_accuracy',verbose=1, save_best_only=True, save_weights_only=True)
 
-# train the model on the new data for a few epochs
 model.fit(train_generator, 
     steps_per_epoch=steps_per_epoch,
     epochs=epochs,
     validation_data=val_generator,
-    validation_steps=3000
+    validation_steps=65, # 8386 / 128
+    callbacks=[model_checkpoint]
 )
 
-model.save('batch_%d_epochs_%d_steps_%d_0.h5'%(batch_size, epochs, steps_per_epoch))
-
+#model.save('batch_%d_epochs_%d_steps_%d_0.h5'%(batch_size, epochs, steps_per_epoch))
